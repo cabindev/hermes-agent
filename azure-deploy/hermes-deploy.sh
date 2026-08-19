@@ -22,6 +22,10 @@ docker pull "$IMAGE"
 
 start_container() {
   local img="$1"
+  # Stop gracefully before removing. `docker rm -f` alone SIGKILLs, so the
+  # gateway never runs its shutdown path and its lifecycle ledger records the
+  # release as an unclean exit indistinguishable from an OOM or VM death.
+  docker stop --timeout 30 "$NAME" >/dev/null 2>&1 || true
   docker rm -f "$NAME" >/dev/null 2>&1 || true
   docker run -d --name "$NAME" --restart unless-stopped \
     -v "$DATA":/opt/data \
