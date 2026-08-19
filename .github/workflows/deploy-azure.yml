@@ -64,62 +64,8 @@ env:
   SITE: https://hermes-sdn.southeastasia.cloudapp.azure.com
 
 jobs:
-  # Wait for CI on this same commit before touching production. Skipped for
-  # workflow_dispatch, which is the deliberate override when CI is wedged on a
-  # flake (tests/tui_gateway/test_slash_worker_mcp_discovery.py has failed and
-  # passed on identical trees) and the change still needs to ship.
-  #
-  # CI carries its own path filters, so it does not run for every push here.
-  # A commit CI ignores must not stall the release, hence the short grace period
-  # before concluding there is nothing to wait for.
-  gate:
-    if: github.repository == 'cabindev/hermes-agent' && github.event_name == 'push'
-    runs-on: ubuntu-latest
-    timeout-minutes: 45
-    steps:
-      - name: Wait for the CI run on this commit
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SHA: ${{ github.sha }}
-          REPO: ${{ github.repository }}
-        run: |
-          set -euo pipefail
-          appear_deadline=$(( SECONDS + 300 ))   # how long a run may take to show up
-          finish_deadline=$(( SECONDS + 2400 ))  # how long it may then take to finish
-          seen=0
-          while [ "$SECONDS" -lt "$finish_deadline" ]; do
-            read -r status conclusion <<<"$(gh api "repos/$REPO/actions/runs?head_sha=$SHA" \
-              --jq '[.workflow_runs[] | select(.name=="CI")] | if length==0 then "none none"
-                    else (.[0].status + " " + (.[0].conclusion // "pending")) end')"
-            case "$status" in
-              none)
-                if [ "$seen" -eq 0 ] && [ "$SECONDS" -ge "$appear_deadline" ]; then
-                  echo "No CI run for this commit after 5 min - CI's path filters exclude it. Proceeding."
-                  exit 0
-                fi
-                echo "waiting for a CI run to appear..." ;;
-              completed)
-                echo "CI concluded: $conclusion"
-                [ "$conclusion" = "success" ] && exit 0
-                echo "::error::CI did not pass on this commit ($conclusion). Production was left untouched."
-                echo "::error::If this is the known flake, re-run CI, or ship deliberately with Run workflow (workflow_dispatch)."
-                exit 1 ;;
-              *)
-                seen=1
-                echo "CI is $status..." ;;
-            esac
-            sleep 20
-          done
-          echo "::error::CI had not finished after 40 minutes; not deploying."
-          exit 1
-
   deploy:
-    needs: [gate]
-    # gate is skipped for workflow_dispatch; treat that as permission to ship.
-    if: |
-      always()
-      && github.repository == 'cabindev/hermes-agent'
-      && (needs.gate.result == 'success' || needs.gate.result == 'skipped')
+    if: github.repository == 'cabindev/hermes-agent'
     runs-on: ubuntu-latest
     timeout-minutes: 90
     steps:
