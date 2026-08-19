@@ -12,6 +12,38 @@ name: Deploy to Azure
 on:
   push:
     branches: [main]
+    # The Dockerfile ends in `COPY --link . .`, so almost every tracked file
+    # lands in the image and a change to it is a real change to production.
+    # Every entry below is either already excluded by .dockerignore, so it
+    # cannot alter the image at all, or one of two exceptions that do reach the
+    # image but nothing at runtime reads: azure-deploy/ (host-side tooling that
+    # provisions and drives the VM from outside the container) and LICENSE.
+    #
+    # Deliberately NOT ignored:
+    #   - skills/**, and markdown outside the repo root generally. .dockerignore's
+    #     `*.md` only matches root-level files, so nested markdown is in the image
+    #     and skills/ markdown is executable content, not documentation.
+    #   - .github/**, so a change to this workflow still gets exercised.
+    paths-ignore:
+      - '*.md'
+      - 'docs/**'
+      - 'website/**'
+      - 'tests/**'
+      - 'assets/**'
+      - 'infographic/**'
+      - 'packaging/**'
+      - 'plans/**'
+      - '.plans/**'
+      - 'nix/**'
+      - 'flake.nix'
+      - 'flake.lock'
+      - 'azure-deploy/**'
+      - 'LICENSE'
+      - '.gitattributes'
+      - '.mailmap'
+      - '.hadolint.yaml'
+      - '.envrc'
+      - '.env.example'
   workflow_dispatch:
 
 permissions:
