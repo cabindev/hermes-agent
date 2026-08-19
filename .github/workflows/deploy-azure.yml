@@ -64,8 +64,62 @@ env:
   SITE: https://hermes-sdn.southeastasia.cloudapp.azure.com
 
 jobs:
+  # Wait for CI on this same commit before touching production. Skipped for
+  # workflow_dispatch, which is the deliberate override when CI is wedged on a
+  # flake (tests/tui_gateway/test_slash_worker_mcp_discovery.py has failed and
+  # passed on identical trees) and the change still needs to ship.
+  #
+  # CI carries its own path filters, so it does not run for every push here.
+  # A commit CI ignores must not stall the release, hence the short grace period
+  # before concluding there is nothing to wait for.
+  gate:
+    if: github.repository == 'cabindev/hermes-agent' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Wait for the CI run on this commit
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SHA: ${{ github.sha }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          appear_deadline=$(( SECONDS + 300 ))   # how long a run may take to show up
+          finish_deadline=$(( SECONDS + 2400 ))  # how long it may then take to finish
+          seen=0
+          while [ "$SECONDS" -lt "$finish_deadline" ]; do
+            read -r status conclusion <<<"$(gh api "repos/$REPO/actions/runs?head_sha=$SHA" \
+              --jq '[.workflow_runs[] | select(.name=="CI")] | if length==0 then "none none"
+                    else (.[0].status + " " + (.[0].conclusion // "pending")) end')"
+            case "$status" in
+              none)
+                if [ "$seen" -eq 0 ] && [ "$SECONDS" -ge "$appear_deadline" ]; then
+                  echo "No CI run for this commit after 5 min - CI's path filters exclude it. Proceeding."
+                  exit 0
+                fi
+                echo "waiting for a CI run to appear..." ;;
+              completed)
+                echo "CI concluded: $conclusion"
+                [ "$conclusion" = "success" ] && exit 0
+                echo "::error::CI did not pass on this commit ($conclusion). Production was left untouched."
+                echo "::error::If this is the known flake, re-run CI, or ship deliberately with Run workflow (workflow_dispatch)."
+                exit 1 ;;
+              *)
+                seen=1
+                echo "CI is $status..." ;;
+            esac
+            sleep 20
+          done
+          echo "::error::CI had not finished after 40 minutes; not deploying."
+          exit 1
+
   deploy:
-    if: github.repository == 'cabindev/hermes-agent'
+    needs: [gate]
+    # gate is skipped for workflow_dispatch; treat that as permission to ship.
+    if: |
+      always()
+      && github.repository == 'cabindev/hermes-agent'
+      && (needs.gate.result == 'success' || needs.gate.result == 'skipped')
     runs-on: ubuntu-latest
     timeout-minutes: 90
     steps:
@@ -115,6 +169,23 @@ jobs:
       # so the VM-side success marker is what this step actually gates on.
       # hermes-deploy.sh health-checks the new container and rolls back to the
       # previous image if it does not come up.
+      # The VM used to hold the only copy of this script, so the repo and the
+      # box could drift apart silently. Ship it with every release instead.
+      - name: Sync the VM-side deploy script from the repo
+        run: |
+          set -euo pipefail
+          b64=$(base64 -w0 azure-deploy/hermes-deploy.sh)
+          out=$(az vm run-command invoke \
+            -g "$RG" -n "$VM" \
+            --command-id RunShellScript \
+            --scripts "echo '$b64' | base64 -d | sudo tee /usr/local/bin/hermes-deploy.sh >/dev/null \
+                       && sudo chmod 755 /usr/local/bin/hermes-deploy.sh \
+                       && sudo bash -n /usr/local/bin/hermes-deploy.sh \
+                       && echo SYNC_OK" \
+            --query "value[0].message" -o tsv)
+          echo "$out"
+          grep -q SYNC_OK <<<"$out" || { echo "::error::could not install the deploy script on the VM"; exit 1; }
+
       - name: Roll the VM onto the new image
         run: |
           set -euo pipefail
@@ -140,3 +211,34 @@ jobs:
           done
           echo "::error::$SITE/login never returned 200"
           exit 1
+
+      # Housekeeping only - the release is already live and verified above, and
+      # a public package costs no storage, so a permissions failure here must not
+      # fail the run. GITHUB_TOKEN's reach over a *user*-owned package is not
+      # guaranteed; if this cannot do the job it says so and moves on.
+      - name: Trim old GHCR versions
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          KEEP: '10'
+        run: |
+          set -uo pipefail
+          owner='${{ github.repository_owner }}'
+          pkg='hermes-agent'
+          if ! versions=$(gh api --paginate "users/$owner/packages/container/$pkg/versions" 2>/dev/null); then
+            echo "cannot list package versions with GITHUB_TOKEN - skipping."
+            echo "To enable, run this once by hand with a PAT that has delete:packages,"
+            echo "or prune from the package's Settings page on GitHub."
+            exit 0
+          fi
+          # Newest first; never touch anything still tagged :latest.
+          stale=$(jq -r --argjson keep "$KEEP" '
+            [ .[] | select((.metadata.container.tags // []) | index("latest") | not) ]
+            | sort_by(.created_at) | reverse | .[$keep:] | .[].id' <<<"$versions")
+          [ -z "$stale" ] && { echo "nothing to trim (keeping $KEEP)"; exit 0; }
+          echo "deleting $(wc -l <<<"$stale") old version(s), keeping the newest $KEEP"
+          while read -r id; do
+            [ -z "$id" ] && continue
+            gh api -X DELETE "users/$owner/packages/container/$pkg/versions/$id" >/dev/null 2>&1 \
+              && echo "  deleted $id" || echo "  could not delete $id"
+          done <<<"$stale"

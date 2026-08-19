@@ -79,6 +79,29 @@ cleanup_images() {
   log "reclaimable: ${freed_before:-?} -> ${freed_after:-?}   disk free: $(df -h / | awk 'NR==2{print $4}')"
 }
 
+# Swapping the container kills whatever turn the agent is mid-way through, and
+# the user sees "Gateway shutting down - Your current task will be interrupted".
+# An idle gateway logs nothing at all, so silence is a reliable idle signal.
+# This waits for that silence, but never blocks a release indefinitely.
+wait_for_idle() {
+  local quiet="${IDLE_QUIET:-45}" max="${IDLE_MAX_WAIT:-600}" waited=0 lines
+  docker inspect "$NAME" >/dev/null 2>&1 || { log "no running container; nothing to wait for"; return 0; }
+  log "waiting for the agent to go idle (quiet=${quiet}s, give up after ${max}s)..."
+  while [ "$waited" -lt "$max" ]; do
+    lines="$(docker logs --since "${quiet}s" "$NAME" 2>&1 | grep -c . || true)"
+    if [ "$lines" -eq 0 ]; then
+      log "agent idle (silent for ${quiet}s; waited ${waited}s)"
+      return 0
+    fi
+    log "  busy: ${lines} log line(s) in the last ${quiet}s (waited ${waited}s)"
+    sleep 15; waited=$((waited + 15))
+  done
+  log "still busy after ${max}s - proceeding; the graceful stop below gives the agent its shutdown path"
+  return 0
+}
+
+wait_for_idle
+
 log "starting new container..."
 start_container "$IMAGE"
 

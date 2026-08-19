@@ -6,9 +6,12 @@ Hermes runs on a single Azure VM as a Docker container behind Caddy.
 GitHub push to main
   -> build image from this repo        (.github/workflows/deploy-azure.yml)
   -> ghcr.io/cabindev/hermes-agent:<sha>
+  -> wait for CI on the same commit to pass   (skipped for workflow_dispatch)
   -> az vm run-command  (no inbound SSH is opened for CI)
+  -> install hermes-deploy.sh from this repo onto the VM
   -> /usr/local/bin/hermes-deploy.sh on the VM
-       pull -> swap container -> health check -> prune old images
+       wait for the agent to go idle -> pull -> swap container
+       -> health check -> prune old images
        (rolls back to the previous image if the new one does not come up)
 ```
 
@@ -24,28 +27,25 @@ GitHub push to main
 - `deploy-azure.sh` — one-shot provisioning of the VM. Already run; it is **not
   idempotent** (`az vm create` fails if `hermes-vm` exists). Only needed to
   rebuild from scratch, and only after deleting the resource group.
-- `hermes-deploy.sh` — the per-release script. This is a **copy** of what runs;
-  the live one is `/usr/local/bin/hermes-deploy.sh` on the VM. Editing it here
-  does not update the VM. Push it with:
-
-  ```bash
-  ssh azureuser@hermes-sdn.southeastasia.cloudapp.azure.com \
-    'sudo tee /usr/local/bin/hermes-deploy.sh >/dev/null && sudo chmod 755 /usr/local/bin/hermes-deploy.sh' \
-    < azure-deploy/hermes-deploy.sh
-  ```
+- `hermes-deploy.sh` — the per-release script, and the source of truth: every
+  deploy installs this file onto the VM before running it, so the two cannot
+  drift. Tunables: `KEEP` (images retained, default 2), `IDLE_QUIET` /
+  `IDLE_MAX_WAIT` (how long to wait for an idle agent, default 45s / 600s).
+- `fix-ssh-ip.sh` — repoint the NSG SSH rule at your current public IP and
+  verify the connection. Run it whenever ssh starts hanging.
 
 ## Things that will bite
 
 - **SSH is pinned to one IP.** The NSG rule `allow-ssh-myip` holds whichever
   address ran the last update, and consumer ISPs rotate addresses. When ssh
-  hangs, that is why:
+  hangs, that is why — run `./azure-deploy/fix-ssh-ip.sh`. CI is unaffected; it
+  goes through `az vm run-command`, not SSH.
 
-  ```bash
-  az network nsg rule update -g hermes-agent-rg --nsg-name hermes-vmNSG \
-    -n allow-ssh-myip --source-address-prefixes "$(curl -fsS https://api.ipify.org)"
-  ```
-
-  CI is unaffected — it goes through `az vm run-command`, not SSH.
+- **CI on this fork has a flaky test.**
+  `tests/tui_gateway/test_slash_worker_mcp_discovery.py` has both failed and
+  passed on identical trees. Since the deploy waits for CI, that flake blocks
+  releases. Re-run CI, or ship deliberately with Run workflow, which skips the
+  gate.
 
 - **GitHub's OIDC subject carries numeric IDs.** Entra needs a federated
   credential for `repo:cabindev@157673534/hermes-agent@1338571221:ref:refs/heads/main`,
