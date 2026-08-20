@@ -32,19 +32,26 @@ sentiment จากคอมเมนต์ ตัวสกริปต์ดึ
 
 ## Setup
 
-```
-SCRIPT=~/.hermes/skills/facebook-page-monitor/page_report.py
+สกริปต์อยู่ข้าง SKILL.md นี้ ตำแหน่งต่างกันตามเครื่อง — หาแบบนี้:
+
+```bash
+SCRIPT=$(ls /opt/hermes/skills/social-media/facebook-page-monitor/page_report.py \
+            ~/.hermes/skills/facebook-page-monitor/page_report.py 2>/dev/null | head -1)
 ```
 
 credential อ่านตามลำดับ:
 1. env `FACEBOOK_PAGE_ID` / `FACEBOOK_PAGE_TOKEN`
-2. ถ้าไม่มี ดึงจาก Azure Bot channel (`civic-bot` / RG `civicspace_group`) ผ่าน `az`
-   — ต้อง `az login` ใช้ได้
+2. ไฟล์ `.env` ของ Hermes (`$HERMES_HOME/.env`, `~/.hermes/.env`, `/opt/data/.env`)
+3. Azure Bot channel (`civic-bot` / RG `civicspace_group`) ผ่าน `az` — ต้อง `az login`
+
+ข้อ 2 มีไว้เพราะ Hermes อ่าน `.env` ไปใช้เองแต่**ไม่ส่งต่อเข้า environment ของ tool
+ที่มันเรียก** ถ้าไม่มีขั้นนี้ ทุกครั้งที่สั่งผ่าน Telegram จะตกไปข้อ 3 แล้วพัง
+เพราะ container ไม่ได้ติดตั้ง `az`
 
 **เช็คสิทธิ์ก่อนเสมอเมื่อเจอผลแปลกๆ:**
 
 ```bash
-python3 $SCRIPT --check
+python3 "$SCRIPT" --check
 ```
 
 บอกว่า token มี scope อะไร เหลืออายุกี่วัน และยิง endpoint จริงให้ดูว่าอันไหนผ่าน
@@ -52,10 +59,10 @@ python3 $SCRIPT --check
 ## Usage
 
 ```bash
-python3 $SCRIPT --since 7d                    # รายงานสัปดาห์ที่ผ่านมา
-python3 $SCRIPT --since 2026-08-01 --until 2026-09-01
-python3 $SCRIPT --since 30d --format json     # ให้ agent ประมวลผลต่อ
-python3 $SCRIPT --since 7d --with-comments    # ดึงคอมเมนต์มาทำ sentiment
+python3 "$SCRIPT" --since 7d                    # รายงานสัปดาห์ที่ผ่านมา
+python3 "$SCRIPT" --since 2026-08-01 --until 2026-09-01
+python3 "$SCRIPT" --since 30d --format json     # ให้ agent ประมวลผลต่อ
+python3 "$SCRIPT" --since 7d --with-comments    # ดึงคอมเมนต์มาทำ sentiment
 ```
 
 | Option | Notes |
@@ -119,14 +126,14 @@ env จะถูกใช้ก่อน token ของ Azure Bot เสมอ 
 > "เพจสัปดาห์นี้เป็นไงบ้าง"
 
 ```bash
-python3 $SCRIPT --since 7d
+python3 "$SCRIPT" --since 7d
 ```
 รายงานตารางมาแล้วสรุปสั้นๆ ว่าโพสต์ไหนเด่น ธีมเนื้อหาเป็นแนวไหน
 
 > "คนคิดยังไงกับโพสต์เดือนนี้"
 
 ```bash
-python3 $SCRIPT --since 30d --with-comments --format json
+python3 "$SCRIPT" --since 30d --with-comments --format json
 ```
 ถ้าขึ้นว่าดึงคอมเมนต์ไม่ได้ ให้บอกผู้ใช้ตรงๆ ว่าติดสิทธิ์ อย่าเดา sentiment
 จากตัวเนื้อโพสต์แทน

@@ -17,6 +17,7 @@ import sys
 import urllib.error
 import urllib.parse
 import urllib.request
+from pathlib import Path
 from datetime import datetime, timedelta, timezone
 
 GRAPH = "https://graph.facebook.com/v21.0/"
@@ -42,16 +43,54 @@ def credentials_from_azure():
         return None, None
 
 
+# Hermes loads its own .env for config but does not push those values into the
+# environment of tools it spawns, so a gateway-driven run sees none of them.
+# Read the file directly before falling back to Azure — otherwise every run from
+# Telegram lands on the `az` path, and `az` is not in the container image.
+ENV_FILES = [
+    os.environ.get("HERMES_HOME", "") and Path(os.environ["HERMES_HOME"]) / ".env",
+    Path.home() / ".hermes" / ".env",
+    Path("/opt/data/.env"),
+    Path.cwd() / ".env",
+]
+
+
+def credentials_from_env_file():
+    """คืน (page_id, token) จากไฟล์ .env ตัวแรกที่มีค่าครบ"""
+    for path in ENV_FILES:
+        if not path:
+            continue
+        try:
+            text = Path(path).read_text()
+        except OSError:
+            continue
+        found = {}
+        for line in text.splitlines():
+            line = line.strip()
+            if line.startswith("#") or "=" not in line:
+                continue
+            key, _, value = line.partition("=")
+            if key.strip() in ("FACEBOOK_PAGE_ID", "FACEBOOK_PAGE_TOKEN"):
+                found[key.strip()] = value.strip().strip('"').strip("'")
+        if found.get("FACEBOOK_PAGE_ID") and found.get("FACEBOOK_PAGE_TOKEN"):
+            return found["FACEBOOK_PAGE_ID"], found["FACEBOOK_PAGE_TOKEN"]
+    return None, None
+
+
 def resolve_credentials():
     page_id = os.environ.get("FACEBOOK_PAGE_ID")
     token = os.environ.get("FACEBOOK_PAGE_TOKEN")
+    if not (page_id and token):
+        file_page, file_token = credentials_from_env_file()
+        page_id = page_id or file_page
+        token = token or file_token
     if not (page_id and token):
         az_page, az_token = credentials_from_azure()
         page_id = page_id or az_page
         token = token or az_token
     if not (page_id and token):
         sys.exit("ไม่พบ credential — ตั้ง FACEBOOK_PAGE_ID / FACEBOOK_PAGE_TOKEN "
-                 "หรือ az login ให้เข้าถึง Azure Bot channel")
+                 "ใน environment หรือใน .env ของ Hermes (เช่น /opt/data/.env)")
     return page_id, token
 
 # ── graph ────────────────────────────────────────────────────────────────
