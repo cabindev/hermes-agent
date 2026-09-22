@@ -1,6 +1,6 @@
 ---
 name: facebook-page-monitor
-description: "Track the CivicSpace Facebook page — new posts, engagement counts, and comment sentiment."
+description: "Track CivicSpace page posts, engagement, and comments."
 version: 1.0.0
 author: cabindev + Hermes Agent
 license: MIT
