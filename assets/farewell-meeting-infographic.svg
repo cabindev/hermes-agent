@@ -1,0 +1,123 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1800" viewBox="0 0 1200 1800" role="img" aria-labelledby="title desc">
+<title id="title">งานศพเรียบง่าย: นิทรรศการผลลัพธ์จริงและเวทีฟังเสียงชุมชน</title>
+<desc id="desc">อินโฟกราฟิกโลงขาวสรุปรูปแบบกิจกรรมช่วงเช้า นิทรรศการผลลัพธ์ในแต่ละพื้นที่ ฟังเสียงผู้จัดงานจริงและชุมชน แล้วยื่นข้อเสนอต่อฝ่ายนโยบายหรือเสนอนำร่องระดับตำบล โดยเลือกสถานที่จัดที่สุรินทร์หรือบุรีรัมย์</desc>
+<style>
+@font-face{font-family:'FC Vision';src:local('FC Vision');font-weight:100 900}
+*{box-sizing:border-box} text{font-family:'FC Vision','Thonburi',sans-serif;fill:#17191b}
+.small{font-size:21px;fill:#5e6266}.body{font-size:25px}.body2{font-size:23px}.label{font-size:23px;font-weight:700;letter-spacing:.3px}.big{font-size:55px;font-weight:800}.medium{font-size:34px;font-weight:700}.head{font-size:56px;font-weight:800}.panel{fill:#fff;stroke:#c9cdd0;stroke-width:2}.rule{stroke:#d5d8da;stroke-width:2}.yellow{fill:#f2c500}.goldstroke{stroke:#d5aa00}.grey{fill:#777c81}
+</style>
+<rect width="1200" height="1800" fill="#fbfbf9"/>
+<!-- header -->
+<rect x="0" y="0" width="1200" height="18" fill="#f2c500"/>
+<text x="64" y="84" class="label" fill="#17191b">CIVICSPACE  /  เวทีสาธารณะ</text>
+<text x="64" y="153" class="head">งานศพเรียบง่าย</text>
+<text x="66" y="202" class="body">นิทรรศการผลลัพธ์จริง • ฟังเสียงผู้จัดงาน • ยื่นข้อเสนอ</text>
+<rect x="845" y="58" width="290" height="115" rx="12" fill="#f2c500"/>
+<text x="870" y="103" class="label">เตรียมประชุม</text><text x="870" y="148" class="medium">29 ต.ค. 2569</text>
+<text x="66" y="244" class="small">เลือกจัด 1 จังหวัด:  สุรินทร์  หรือ  บุรีรัมย์</text>
+
+<!-- upper left: CivicSpace data -->
+<rect x="54" y="278" width="350" height="258" rx="8" class="panel"/>
+<rect x="54" y="278" width="10" height="258" rx="5" class="yellow"/>
+<text x="82" y="320" class="label">นิทรรศการผลลัพธ์จริง</text>
+<text x="82" y="370" class="body2">นำเสนอสิ่งที่เกิดขึ้นจริง</text>
+<text x="82" y="405" class="body2">ในแต่ละพื้นที่</text>
+<line x1="82" y1="425" x2="375" y2="425" class="rule"/>
+<text x="82" y="466" class="body2">รูปแบบงาน • ค่าใช้จ่าย</text>
+<text x="82" y="501" class="body2">ผลลัพธ์และบทเรียนชุมชน</text>
+
+<!-- upper right: forum format -->
+<rect x="796" y="278" width="350" height="258" rx="8" class="panel"/>
+<rect x="796" y="278" width="10" height="258" rx="5" class="yellow"/>
+<text x="824" y="320" class="label">เลือกพื้นที่จัดเวที</text>
+<text x="824" y="368" class="medium">สุรินทร์</text>
+<text x="824" y="411" class="body2">หรือ บุรีรัมย์</text>
+<text x="824" y="449" class="body2">เลือก 1 จังหวัดในที่ประชุม</text>
+<text x="824" y="497" class="small">ยังไม่ระบุจังหวัดที่เลือก</text>
+
+<!-- central coffin illustration, plain white -->
+<g aria-label="โลงศพสีขาวแบบเรียบง่าย" transform="translate(0 179) scale(1 .65)">
+  <ellipse cx="600" cy="1190" rx="150" ry="13" fill="#e3e5e4"/>
+  <!-- white coffin shell -->
+  <path d="M518 493 L682 493 L757 579 L721 1004 L684 1148 L516 1148 L479 1004 L443 579 Z" fill="#f1f2ef" stroke="#666b6f" stroke-width="6"/>
+  <!-- lid inset -->
+  <path d="M531 520 L669 520 L728 590 L696 987 L661 1111 L539 1111 L504 987 L472 590 Z" fill="#fafaf7" stroke="#9da2a3" stroke-width="4"/>
+  <!-- restrained yellow line -->
+  <path d="M500 616 L700 616 M485 1002 L715 1002" fill="none" stroke="#f2c500" stroke-width="6"/>
+  <!-- simple handles -->
+  <g fill="#f2c500" stroke="#947700" stroke-width="2">
+    <path d="M465 744 h28 v64 h-28 q-10 0-10-10 v-44 q0-10 10-10z"/><path d="M707 744 h28 q10 0 10 10 v44 q0 10-10 10 h-28z"/>
+    <path d="M482 914 h23 v48 h-23 q-8 0-8-8 v-32 q0-8 8-8z"/><path d="M695 914 h23 q8 0 8 8 v32 q0 8-8 8 h-23z"/>
+  </g>
+  <!-- small white flower, respectful, minimal -->
+  <g transform="translate(600 559)" stroke="#c6c8c8" stroke-width="2" fill="#fff">
+    <ellipse cy="-20" rx="8" ry="18"/><ellipse cy="-20" rx="8" ry="18" transform="rotate(60)"/><ellipse cy="-20" rx="8" ry="18" transform="rotate(120)"/><circle r="7" fill="#f2c500" stroke="#d0ad20"/>
+  </g>
+  <text x="600" y="842" text-anchor="middle" class="label" fill="#777c81">เรียบง่าย</text>
+  <text x="600" y="876" text-anchor="middle" class="small">ประหยัด • รักษาคุณค่า</text>
+</g>
+<!-- connectors -->
+<path d="M404 404 H440 L477 475" fill="none" stroke="#b4b8ba" stroke-width="2"/><circle cx="477" cy="475" r="6" class="yellow"/>
+<path d="M796 418 H760 L725 475" fill="none" stroke="#b4b8ba" stroke-width="2"/><circle cx="725" cy="475" r="6" class="yellow"/>
+
+<!-- left response panel -->
+<rect x="54" y="602" width="350" height="310" rx="8" class="panel"/>
+<rect x="54" y="602" width="10" height="310" rx="5" class="yellow"/>
+<text x="82" y="646" class="label">ฟังเสียงจากผู้จัดงานจริง</text>
+<text x="82" y="704" class="body2">เจ้าภาพเล่าประสบการณ์ตรง</text>
+<text x="82" y="742" class="body2">ทั้งวิธีจัดงานและค่าใช้จ่าย</text>
+<line x1="82" y1="772" x2="375" y2="772" class="rule"/>
+<text x="82" y="823" class="medium">ชุมชนเล่า</text>
+<text x="82" y="866" class="body2">อะไรเหมาะกับพื้นที่</text>
+<text x="82" y="897" class="body2">และควรรักษาคุณค่าใดไว้</text>
+
+<!-- right preparation panel -->
+<rect x="796" y="602" width="350" height="310" rx="8" class="panel"/>
+<rect x="796" y="602" width="10" height="310" rx="5" class="yellow"/>
+<text x="824" y="646" class="label">หัวใจของงาน</text>
+<text x="824" y="704" class="medium">เรียบง่าย</text>
+<text x="824" y="746" class="body2">ประหยัด ลดภาระเจ้าภาพ</text>
+<line x1="824" y1="772" x2="1116" y2="772" class="rule"/>
+<text x="824" y="823" class="body2">ยังรักษาคุณค่าและวิถี</text>
+<text x="824" y="861" class="body2">ของแต่ละพื้นที่</text>
+<text x="824" y="897" class="small">ไม่เหมารวมความต่างของชุมชน</text>
+
+<!-- forum flow -->
+<rect x="54" y="962" width="1092" height="178" rx="8" fill="#f1f2f0"/>
+<text x="82" y="1007" class="label">รูปแบบช่วงเช้า</text>
+<g>
+<circle cx="166" cy="1067" r="24" class="yellow"/><text x="166" y="1076" text-anchor="middle" class="label">1</text>
+<text x="208" y="1075" class="body">ชมนิทรรศการ</text>
+<path d="M350 1067 H432" stroke="#b8bdbe" stroke-width="3"/><path d="M432 1067 l-14-9 v18z" fill="#f2c500"/>
+<circle cx="496" cy="1067" r="24" class="yellow"/><text x="496" y="1076" text-anchor="middle" class="label">2</text>
+<text x="538" y="1075" class="body">ฟังผู้จัดงานจริง</text>
+<path d="M704 1067 H785" stroke="#b8bdbe" stroke-width="3"/><path d="M785 1067 l-14-9 v18z" fill="#f2c500"/>
+<circle cx="849" cy="1067" r="24" class="yellow"/><text x="849" y="1076" text-anchor="middle" class="label">3</text>
+<text x="891" y="1075" class="body">ชุมชนร่วมเล่า</text>
+</g>
+<text x="82" y="1110" class="small">ปิดท้ายด้วยการยื่นข้อเสนอต่อฝ่ายนโยบาย หรือเสนอนำร่องระดับตำบล</text>
+<text x="82" y="1136" class="small">เป้าหมายคือได้ผู้รับเรื่องและแนวทางเดินหน้าที่ชัดเจน</text>
+
+<!-- five proposals -->
+<text x="54" y="1200" class="medium">สาระสำคัญที่อยากนำเสนอ</text>
+<g>
+ <rect x="54" y="1230" width="204" height="225" rx="8" class="panel"/><rect x="54" y="1230" width="204" height="10" rx="5" class="yellow"/>
+ <text x="74" y="1280" class="label">01  ผลลัพธ์จริง</text><text x="74" y="1323" class="body2">จากแต่ละพื้นที่</text><text x="74" y="1356" class="body2">มีอะไรเกิดขึ้นแล้ว</text><text x="74" y="1415" class="small">เรียนรู้จากของจริง</text>
+ <rect x="276" y="1230" width="204" height="225" rx="8" class="panel"/><rect x="276" y="1230" width="204" height="10" rx="5" class="yellow"/>
+ <text x="296" y="1280" class="label">02  เรียบง่าย</text><text x="296" y="1323" class="body2">จัดอย่างประหยัด</text><text x="296" y="1356" class="body2">ลดภาระเจ้าภาพ</text><text x="296" y="1415" class="small">เห็นทางเลือกจริง</text>
+ <rect x="498" y="1230" width="204" height="225" rx="8" class="panel"/><rect x="498" y="1230" width="204" height="10" rx="5" class="yellow"/>
+ <text x="518" y="1280" class="label">03  คุณค่าพื้นที่</text><text x="518" y="1323" class="body2">เคารพความเชื่อ</text><text x="518" y="1356" class="body2">และวิถีชุมชน</text><text x="518" y="1415" class="small">ไม่ทิ้งอัตลักษณ์</text>
+ <rect x="720" y="1230" width="204" height="225" rx="8" class="panel"/><rect x="720" y="1230" width="204" height="10" rx="5" class="yellow"/>
+ <text x="740" y="1280" class="label">04  ผู้จัดงานจริง</text><text x="740" y="1323" class="body2">เล่าประสบการณ์</text><text x="740" y="1356" class="body2">ให้เห็นภาพจริง</text><text x="740" y="1415" class="small">ฟังจากเจ้าภาพ</text>
+ <rect x="942" y="1230" width="204" height="225" rx="8" class="panel"/><rect x="942" y="1230" width="204" height="10" rx="5" class="yellow"/>
+ <text x="962" y="1280" class="label">05  ข้อเสนอ</text><text x="962" y="1323" class="body2">เสนอต่อฝ่าย</text><text x="962" y="1356" class="body2">นโยบาย หรือทดลอง</text><text x="962" y="1415" class="small">นำร่องระดับตำบล</text>
+</g>
+<!-- caveat and close -->
+<rect x="54" y="1490" width="1092" height="170" rx="8" fill="#fff8d7" stroke="#e8cf57" stroke-width="2"/>
+<text x="82" y="1535" class="label">ผลที่อยากได้จากเวที</text>
+<text x="82" y="1580" class="body2">ฝ่ายนโยบายรับข้อเสนอและระบุแนวทางดำเนินการต่อ</text>
+<text x="82" y="1620" class="body2">หรือร่วมเลือกพื้นที่นำร่องระดับตำบล เพื่อทดลองและเรียนรู้จากผลจริง</text>
+<line x1="54" y1="1692" x2="1146" y2="1692" stroke="#c9cdd0" stroke-width="2"/>
+<text x="54" y="1738" class="small">เตรียมประชุม 29 ต.ค. 2569  •  สถานที่จัด: เลือกสุรินทร์หรือบุรีรัมย์  •  รูปแบบช่วงเช้า</text>
+<text x="1146" y="1738" text-anchor="end" class="small">01</text>
+</svg>
