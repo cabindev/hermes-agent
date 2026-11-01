@@ -71,17 +71,36 @@ def since_stamp(value):
     return value
 
 
-def fetch_posts(page, token, since, limit):
-    """ไล่ทุกหน้าของ /posts — ครอบคลุมทั้งรีลและอัลบั้มภาพ ไม่ต้องยิง /video_reels แยก"""
-    out, url, params = [], None, {"fields": FIELDS, "limit": 100, "since": since_stamp(since)}
+def with_page_size(url, size):
+    """เปลี่ยนค่า limit ใน URL หน้าถัดไป โดยคง query อื่นไว้ครบ"""
+    parts = urllib.parse.urlsplit(url)
+    query = dict(urllib.parse.parse_qsl(parts.query), limit=str(size))
+    return urllib.parse.urlunsplit(parts._replace(query=urllib.parse.urlencode(query)))
+
+
+def fetch_posts(page, token, since, limit, page_size=25):
+    """ไล่ทุกหน้าของ /posts — ครอบคลุมทั้งรีลและอัลบั้มภาพ ไม่ต้องยิง /video_reels แยก
+
+    FIELDS หนัก (สรุปยอด + ภาพ) Graph จึงตอบ code 1 "reduce the amount of data" เมื่อหน้าใหญ่
+    เจอแล้วลดขนาดหน้าลงครึ่งหนึ่งแล้วยิงหน้าเดิมซ้ำ จนเหลือ 1 ก็ยังไม่ผ่านถึงยอมแพ้
+    """
+    out, url = [], None
+    params = {"fields": FIELDS, "limit": page_size, "since": since_stamp(since)}
     while len(out) < limit:
         data, err = graph(url or f"{page}/posts", {} if url else params, token)
+        if err and err.get("code") == 1 and page_size > 1:
+            page_size //= 2
+            params["limit"] = page_size
+            url = with_page_size(url, page_size) if url else None
+            continue
         if err:
             sys.exit(f"Graph ตอบกลับผิดพลาด: {err.get('message')} (code {err.get('code')})")
         out += data.get("data", [])
         url = (data.get("paging") or {}).get("next")
         if not url:
             break
+        # ลิงก์หน้าถัดไปของ Graph ยังขอขนาดเดิม ต้องปรับเป็นขนาดที่เพิ่งผ่าน ไม่งั้นโดนปฏิเสธซ้ำทุกหน้า
+        url = with_page_size(url, page_size)
     return out[:limit]
 
 

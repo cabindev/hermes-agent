@@ -20,6 +20,8 @@ DECK_DIR = REPO / "skills" / "social-media" / "page-campaign-deck"
 TOPIC_DIRS = (
     REPO / "skills" / "civicspace" / "roiet-youth",
     REPO / "skills" / "civicspace" / "funeral-norms",
+    REPO / "skills" / "civicspace" / "nan-kids",
+    REPO / "skills" / "civicspace" / "loy-krathong",
 )
 
 
@@ -187,6 +189,54 @@ def test_graph_appends_the_token_to_a_paging_url_that_lacks_it(pull, seen_urls):
     url = seen_urls[0]
     assert "?after=CUR&access_token=secret" in url
     assert url.count("?") == 1
+
+
+# --------------------------------------------------------------------------
+# campaign_pull: backing off when Graph says the page is too heavy
+# --------------------------------------------------------------------------
+_TOO_MUCH = {"code": 1, "message": "Please reduce the amount of data you're asking for"}
+
+
+def _scripted_graph(pull, monkeypatch, max_ok, pages):
+    """Graph stand-in that refuses any request whose page size exceeds max_ok."""
+    calls = []
+
+    def fake_graph(path, params, token):
+        if path.startswith("http"):
+            size = int(dict(pull.urllib.parse.parse_qsl(pull.urllib.parse.urlsplit(path).query))["limit"])
+        else:
+            size = params["limit"]
+        calls.append((path, size))
+        if size > max_ok:
+            return None, _TOO_MUCH
+        return pages.pop(0), None
+
+    monkeypatch.setattr(pull, "graph", fake_graph)
+    return calls
+
+
+def test_fetch_posts_halves_the_page_until_graph_accepts(pull, monkeypatch):
+    calls = _scripted_graph(pull, monkeypatch, max_ok=6, pages=[{"data": [{"id": "a"}]}])
+    assert pull.fetch_posts("PAGE", "tok", "2026-01-01", 10, page_size=25) == [{"id": "a"}]
+    assert [size for _, size in calls] == [25, 12, 6]
+
+
+def test_fetch_posts_carries_the_smaller_size_onto_paging_urls(pull, monkeypatch):
+    nxt = "https://graph.facebook.com/v21.0/PAGE/posts?after=CUR&limit=25&access_token=tok"
+    pages = [{"data": [{"id": "a"}], "paging": {"next": nxt}}, {"data": [{"id": "b"}]}]
+    calls = _scripted_graph(pull, monkeypatch, max_ok=12, pages=pages)
+    assert pull.fetch_posts("PAGE", "tok", "2026-01-01", 10, page_size=25) == [{"id": "a"}, {"id": "b"}]
+    # Graph's next-page URL still says limit=25; following it verbatim would be refused
+    # again and halve a size that already works, so it goes out at the accepted 12
+    assert [size for _, size in calls] == [25, 12, 12]
+    followed = calls[-1][0]
+    assert "after=CUR" in followed and "access_token=tok" in followed
+
+
+def test_fetch_posts_gives_up_when_even_one_post_is_too_much(pull, monkeypatch):
+    _scripted_graph(pull, monkeypatch, max_ok=0, pages=[])
+    with pytest.raises(SystemExit):
+        pull.fetch_posts("PAGE", "tok", "2026-01-01", 10, page_size=4)
 
 
 # --------------------------------------------------------------------------
