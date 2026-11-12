@@ -19,7 +19,7 @@ metadata:
 sentiment จากคอมเมนต์ ตัวสกริปต์ดึงข้อมูลดิบมาให้ ส่วนการสรุปและตีความ
 เป็นหน้าที่ของ agent
 
-อ่านอย่างเดียว ไม่โพสต์ ไม่ตอบคอมเมนต์ ไม่แก้อะไรบนเพจ
+อ่านอย่างเดียว ไม่โพสต์ ไม่ตอบคอมเมนต์ — ยกเว้นการกดถูกใจคอมเมนต์ (ดูหัวข้อด้านล่าง)
 
 ## When to Use
 
@@ -109,13 +109,34 @@ export FACEBOOK_PAGE_TOKEN=<token ใหม่>
 
 env จะถูกใช้ก่อน token ของ Azure Bot เสมอ **บอท Messenger จึงไม่กระทบ**
 
+## กดถูกใจคอมเมนต์อัตโนมัติ
+
+ข้อยกเว้นเดียวของ "อ่านอย่างเดียว" ข้างบน: `like_comments.py` กดถูกใจคอมเมนต์
+ในนามเพจ ใช้ `FACEBOOK_ENGAGE_TOKEN` (ไม่ใช่ `FACEBOOK_PAGE_TOKEN`)
+
+```bash
+python3 like_comments.py --list --days 14        # คอมเมนต์ที่เพจยังไม่ได้ไลก์ (JSON)
+python3 like_comments.py --like <id> <id> ...    # กดถูกใจ
+```
+
+บน VM รันผ่าน cron `fb-like-comments` (`0 2,11 * * *` UTC = 09:00 และ 18:00 เวลาไทย)
+pre-script `fb_like_candidates.py` ส่งรายการเข้า prompt แล้ว agent เลือกกดเฉพาะ
+คอมเมนต์ที่เป็นมิตรหรือสุภาพ ข้ามคำด่า สแปม และโฆษณาเหล้า/พนัน ไม่แน่ใจ = ไม่กด
+
+- สคริปต์**แลกเป็น page token เองก่อนกด** token ของผู้ใช้ระบบกดตรงๆ จะไลก์เป็นชื่อ
+  ผู้ใช้ระบบ ไม่ใช่เพจ
+- สคริปต์ไม่ตอบและไม่ลบคอมเมนต์ แม้ token จะมีสิทธิ์ทำได้
+
 ## Pitfalls
 
 - **อย่าเอา token ของ Azure Bot ไปใช้ที่อื่น** มันมี `pages_messaging` +
   `pages_manage_metadata` ติดมาด้วย ถ้ารั่ว = ส่งข้อความในนามเพจได้ และถ้าถูก
   revoke บอท Messenger พังตาม ใช้ token แยกสำหรับอ่านเสมอ
-- **data access หมดอายุ 18 พ.ย. 2026** (90 วันนับจากออก) พอถึงวันนั้น Graph
-  จะเริ่มปฏิเสธ ต้อง re-auth `--check` จะเตือนเมื่อเหลือน้อยกว่า 14 วัน
+- **token มาจากผู้ใช้ระบบ `hermes-insights`** ใน Business Manager CivicSpace —
+  ไม่มีวันหมดอายุ (`expires_at` และ `data_access_expires_at` เป็น 0 ทั้งคู่) ตั้งแต่
+  12 พ.ย. 2026 มันมี `pages_manage_engagement` ด้วย เพราะใช้กับงานกดไลก์ (ดูด้านล่าง)
+  ถ้าต้องออกใหม่: Business settings → ผู้ใช้ระบบ → hermes-insights → สร้างโทเค็น →
+  "ไม่เลย" แล้วแลกเป็น page token ด้วย `GET /{page-id}?fields=access_token`
 - **token นี้ใช้ร่วมกับบอท Messenger (civicbot)** — ตั้งแต่ 14 ต.ค. 2026 civicbot ใช้
   token อ่านอย่างเดียวตัวเดียวกันเป็น `FACEBOOK_PAGE_TOKEN` เพื่อตอบผู้ใช้เรื่องโพสต์ล่าสุด
   ต่ออายุแล้วต้องอัปเดต **ทั้งสองที่**: `.env` ของ Hermes และรัน
